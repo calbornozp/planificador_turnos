@@ -399,7 +399,7 @@ export default function PrototipoWebComercial() {
                     <div className="mt-6 rounded-2xl border bg-white p-5 shadow-sm">
                       <div className="text-sm font-semibold mb-2">Valor por alumno</div>
                       <div className="text-slate-700 text-sm leading-relaxed">
-                        $900.000.- (en base a 35 alumnos inscritos). Incluye coffee ejecutivo, diplomas y acceso a aula virtual por el tiempo que dure el programa. No incluye almuerzos ni traslados de participantes.
+                        $1.380.000.- (en base a 35 alumnos inscritos). Incluye dos coffee ejecutivo nivel medio alto, almuerzo, pack de bienvenida, mochila institucional, jornada de cierre en club de campo y coctel de despedida, además de diplomas y acceso a aula virtual por el tiempo que dure el programa.
                       </div>
                     </div>
                   )}

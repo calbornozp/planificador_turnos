@@ -1,0 +1,34 @@
+{
+  "oportunidad": "316356",
+  "records": [
+    {
+      "documento": "21.246.082-6",
+      "tipo_identificacion": "RUT",
+      "nombres": "ana maria",
+      "apellido_paterno": "perez",
+      "apellido_materno": "gonzalez",
+      "email": "ANA.PEREZ@correo.cl",
+      "telefono": "+56 9 8765 4321",
+      "pais_origen": "Chile",
+      "genero": "Mujer",
+      "fecha_nacimiento": "14/05/1998",
+      "direccion": "Calle Falsa 123",
+      "comuna": "Santiago"
+    },
+    {
+      "documento": "AB-778899",
+      "tipo_identificacion": "Pasaporte",
+      "nombres": "leo",
+      "apellido_paterno": "diaz",
+      "apellido_materno": "",
+      "email": "leo@example.com",
+      "telefono": "56911112222",
+      "pais_origen": "Perú",
+      "genero": "Hombre",
+      "fecha_nacimiento": "2000-10-03",
+      "direccion": "Av. Siempre Viva 742",
+      "comuna": "Providencia",
+      "nacionalidad": "1"
+    }
+  ]
+}

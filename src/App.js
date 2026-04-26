@@ -1,540 +1,1945 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from "react";
+import "./App.css";
 
-export default function PrototipoWebComercial() {
-  const screens = [
-    {
-      id: 'P01',
-      title: 'Presentación',
-      subtitle: '' ,
-      body: [
-        'Muchos programas se conciben implícitamente más como un beneficio laboral que como una herramienta de transformación.',
-        'En STEC estamos impulsando una forma de trabajo que permite al mismo tiempo: certificar aprendizajes académicos, desarrollar capacidades profesionales y transferir esas capacidades a los resultados del negocio.',
-        'La posición de GM en GPTW, manteniéndose en el Top 10 durante seis años consecutivos, entre 2020 y 2026, nos anima a colaborar en este proyecto, que combina el interés de la alta gerencia por construir un programa de calidad con los desarrollos tecnológicos del Centro de Liderazgo STEC.',
-        'Contamos con una alianza con el Center for Positive Leadership, un centro que tiene en su claustro a los creadores del concepto liderazgo positivo. Este diploma está avalado por ese centro y, según la fecha, puede contar con académicos del centro como docentes (disponible solo en inglés).',
-        'Esta propuesta describe lo que podemos hacer juntos:',
-      ],
-      audioText:
-        'La capacitación tradicional suele privilegiar los contenidos. Este programa no busca solo transmitir conceptos, sino ayudar a descubrir cómo y por qué adquirir nuevas capacidades permite vivir mejor.',
-      interaction: {
-        type: 'compare',
-        leftTitle: 'Capacitación tradicional',
-        leftPoints: ['Contenido genérico', 'Baja transferencia', 'Escasa personalización'],
-        rightTitle: 'Nuestra promesa',
-        rightPoints: ['Brechas reales', 'Aplicación en cada sesión', 'Seguimiento individual'],
+const DAYS = [
+  "Lunes",
+  "Martes",
+  "Miercoles",
+  "Jueves",
+  "Viernes",
+  "Sabado",
+  "Domingo",
+];
+
+const PDF_PAGE_WIDTH = 595;
+const PDF_PAGE_HEIGHT = 842;
+const PDF_MARGIN_X = 48;
+const PDF_START_Y = 792;
+const PDF_LINE_HEIGHT = 16;
+const PDF_MAX_CHARS = 88;
+const PDF_LINES_PER_PAGE = 44;
+
+const currencyFormatter = new Intl.NumberFormat("es-CL", {
+  style: "currency",
+  currency: "CLP",
+  maximumFractionDigits: 0,
+});
+
+const TAB_CONFIGS = [
+  {
+    id: "administrativo",
+    label: "Turno Administrativo",
+    accent: "var(--admin-accent)",
+    defaultRows: [
+      {
+        day: "Lunes",
+        start: "09:00",
+        end: "18:00",
+        breakMinutes: 60,
+        taxiPickupPoint: "Av. Apoquindo 4001",
+        transferCost: 6800,
       },
-    },
-    {
-      id: 'P02',
-      title: 'Tres pilares que aumentan impacto',
-      subtitle: '',
-      body: [
-        'El programa se estructura sobre tres pilares que mejoran el aprendizaje y la satisfacción de los participantes. ',
-      ],
-      audioText:
-        'El diseño integra pertinencia, acompañamiento y aprendizaje experiencial. La diferencia actual es que la IA permite operar estos pilares con mayor escalabilidad y seguimiento.',
-      interaction: {
-        type: 'tabs',
-        items: [
-          { label: 'Pertinencia', content: 'Cada ejecutivo trabaja sobre brechas reales de su rol y contexto.' },
-          { label: 'Acompañamiento', content: 'Tutoría individual y retroalimentación continua para sostener el proceso.' },
-          { label: 'Experiencial', content: 'Dinámicas, casos y presión aplicada para mover conducta, no solo comprensión.' },
-        ],
+      {
+        day: "Martes",
+        start: "09:00",
+        end: "18:00",
+        breakMinutes: 60,
+        taxiPickupPoint: "Av. Apoquindo 4001",
+        transferCost: 6800,
       },
-    },
-    {
-      id: 'P03',
-      title: 'Arquitectura del programa',
-      subtitle: 'El programa mantiene la estructura de 10 sesiones de medio día de 5 horas por día. Incorporando el aprendizaje experiencial a través del juego y un aula virtual que integra todo el proceso en una experiencia sistémica. Los participantes pueden optar a un diplomado de 120 horas si completan las actividades del aula virtual.' ,
-      body: [],
-      audioText:
-        'La arquitectura es simple y deliberada: primero se comprende, luego se aplica en condiciones exigentes y finalmente se conecta con el marco estratégico del negocio.',
-      interaction: {
-        type: 'timeline',
-        items: [
-          { label: '2h Conceptos', content: 'Modelos de administración y discusión de casos.' },
-          { label: '2h Aplicación', content: 'Dinámicas para forzar uso práctico del criterio.' },
-          { label: '1h Alta gerencia', content: 'Lectura estratégica del problema y sus implicancias.' },
-        ],
+      {
+        day: "Miercoles",
+        start: "09:00",
+        end: "18:00",
+        breakMinutes: 60,
+        taxiPickupPoint: "Av. Apoquindo 4001",
+        transferCost: 6800,
       },
-    },
-    {
-      id: 'P04',
-      title: 'Contenidos del programa',
-      subtitle: '5 temas, 2 sesiones por tema',
-      body: [],
-      audioText: 'El programa cubre cinco temas centrales. Cada tema se trabaja en dos sesiones, combinando marco conceptual y aplicación práctica mediante dinámicas de grupo y juegos de simulación.',
-      interaction: {
-        type: 'cards',
-        items: [
-          { label: 'Estrategia (Porter)', content: 'Foco: análisis estructural de la industria y posicionamiento competitivo. Dinámica: simulación competitiva con decisiones bajo restricciones.' },
-          { label: 'Innovación (Christensen)', content: 'Foco: innovación disruptiva y creación de valor en incertidumbre. Dinámica: laboratorio para diseñar soluciones bajo presión de tiempo.' },
-          { label: 'Confianza (Luhmann)', content: 'Foco: reducción de complejidad y coordinación social. Dinámica: negociación con información incompleta.' },
-          { label: 'Trabajo en equipo (Hackman)', content: 'Foco: condiciones para efectividad de equipos. Dinámica: desafío complejo con roles diferenciados.' },
-          { label: 'Alto desempeño (Ericsson)', content: 'Foco: práctica deliberada y feedback. Dinámica: entrenamiento intensivo con ciclos de ajuste.' },
-          { label: 'Sesión de Team Building y Titulación', content: 'Entrega de premios y reconocimientos. Opcional: el diploma lo entrega el Decano de la Facultad de Economía y Negocios en la ceremonia de MBAs.' },
-        ],
+      {
+        day: "Jueves",
+        start: "09:00",
+        end: "18:00",
+        breakMinutes: 60,
+        taxiPickupPoint: "Av. Apoquindo 4001",
+        transferCost: 6800,
       },
-    },
-    {
-      id: 'P05',
-      title: 'Personalización',
-      subtitle: '',
-      body: [
-        'Cada participante define objetivos vinculados a su momento profesional y personal.',
-      ],
-      audioText:
-        'La personalización no se limita al contenido. Parte desde brechas reales, objetivos propios y decisiones de aplicación concretas. Eso aumenta la pertinencia y la probabilidad de transferencia.',
-      interaction: {
-        type: 'accordion',
-        items: [
-          { label: 'Brecha', content: 'Ejemplo: dificultad para tomar decisiones bajo presión sin perder de vista la cadena de valor del negocio.' },
-          { label: 'Objetivo', content: 'Ejemplo: identificar mi estado emocional cuando mi superior jerárquico me hace un pedido importante y urgente e identificar herramientas para ordenar las ideas y retomar control' },
-          { label: 'Intervención', content: 'escribir en mi bitácora un episodio real en el que sentí pérdida de control frente a un pedido importante y urgente, estudiar las herramientas que me envió mi tutor, usar el juego de negocios de la sesión 3 para entrenar el uso de esas herramientas' },
-          { label: 'Tecnología', content: `El programa se ejecuta sobre el LMS institucional ya operativo, el cual será configurado y adaptado para la implementación del modelo en GM. El LMS incorpora una arquitectura tecnológica con agentes automatizados desarrollados en n8n, modelos de lenguaje (LLMs) operando en Vertex AI y analítica de aprendizaje visualizados en Looker Studio. Esta integración permite monitoreo permanente y en línea del proceso formativo.` },
-        ],
+      {
+        day: "Viernes",
+        start: "09:00",
+        end: "17:00",
+        breakMinutes: 45,
+        taxiPickupPoint: "Av. Apoquindo 4001",
+        transferCost: 6500,
       },
-    },
-    {
-      id: 'P07',
-      title: 'Sistema de seguimiento y transferencia',
-      subtitle: 'Cada jornada cierra con una bitácora obligatoria.',
-      body: [
-        'La bitácora se procesa para generar retroalimentación y recomendaciones personalizadas.',
-      ],
-      audioText:
-        'La bitácora cumple una función crítica: capturar aprendizaje, dificultad y decisión de aplicación. Sobre esa base, la plataforma y la tutoría sostienen el cambio entre sesiones.',
-      interaction: {
-        type: 'flow',
-        items: [
-          'Participante registra aprendizajes',
-          'La plataforma procesa señales',
-          'Se generan sugerencias y refuerzos',
-          'El tutor valida, ajusta, envía email y acompaña reacciones.',
-        ],
+      {
+        day: "Sabado",
+        start: "",
+        end: "",
+        breakMinutes: 0,
+        taxiPickupPoint: "",
+        transferCost: 0,
       },
-    },
-    {
-      id: 'P06',
-      title: 'Aprendizaje integrado al negocio',
-      subtitle: 'Teoría, práctica y conexión estratégica a partir de las charlas de los altos ejecutivos que participan de cada sesión.',
-      body: [],
-      audioText:
-        'Aquí el aprendizaje no corre por fuera del negocio. Cada módulo vincula modelos, experiencia aplicada e intervención de la alta gerencia para asegurar conexión con la realidad estratégica.',
-      interaction: {
-        type: 'cards',
-        items: [
-          { label: 'Conceptual', content: 'Modelos y casos para formar criterio ejecutivo, de alto rigor académico, disponibles en un aula virtual especialmente construida para esta cohorte.' },
-          { label: 'Aplicado', content: 'Dinámicas de grupo en cada sesión que fuerzan coordinación, decisión y ajuste. Al final de cada juego o dinámica grupal, cada participante escribe su bitácora, alimentando la plataforma de agentes de IA que entregan guía y retroalimentación, construyendo una rica base de conocimiento para la Gerencia de Personas.' },
-          { label: 'Estratégico', content: 'Participación de líderes para conectar con prioridades reales. Antes de cada charla, los líderes reciben un informe sobre los desafíos y procesos que están viviendo los profesionales.' },
-        ],
+      {
+        day: "Domingo",
+        start: "",
+        end: "",
+        breakMinutes: 0,
+        taxiPickupPoint: "",
+        transferCost: 0,
       },
-    },
-    {
-      id: 'P09',
-      title: 'La decisión no es sobre contenidos',
-      subtitle: 'Es sobre el tipo de resultado que la organización necesita.',
-      body: [
-        
-      ],
-      audioText:
-        'Si el objetivo es solo exposición a contenidos, hay alternativas más simples. Si el objetivo es maximizar el valor en un periodo de tiempo acotado, este diseño es coherente con ese desafío.',
-      interaction: {
-        type: 'decision',
-        question: '¿Qué necesita hoy su organización?',
-        options: [
-          { label: 'Contenido', feedback: 'Entonces conviene una solución más liviana y menos intensiva.' },
-          { label: 'Acompañar el proceso de cambio', feedback: 'Entonces este diseño es consistente con el tipo de resultado que busca.' },
-        ],
+    ],
+  },
+  {
+    id: "dia",
+    label: "Turno Dia",
+    accent: "var(--day-accent)",
+    defaultRows: [
+      {
+        day: "Lunes",
+        start: "08:00",
+        end: "17:00",
+        breakMinutes: 60,
+        taxiPickupPoint: "Plaza de Puente Alto",
+        transferCost: 7400,
       },
-    },
-    {
-      id: 'P10',
-      title: 'Dirección Académica',
-      subtitle: 'Carlos Albornoz, PhD',
-      body: [
-        'Psicólogo laboral, MBA y doctor en educación de adultos. Se ha especializado en desarrollo de equipos y formación de líderes.',
-        'Con una trayectoria de 20 años dedicados al estudio, la práctica y la investigación sobre cómo los adultos aprenden. Ha diseñado y dirigido programas de entrenamiento en Chile, Alemania y EEUU, trabajando con diversas instituciones como DLab-UDD, la Fundación Luksic, la Unión Europea y la Barbara Bush Foundation en EEUU.',
-        'Ha tenido una inmersión en el mundo del emprendimiento y la gestión de la innovación además de haber coordinado las políticas de capital humano para el Ministerio de Economía chileno.',
-        'Su tesis doctoral en EEUU y sus proyectos Fondecyt en Chile, han contribuido con nuevos enfoques sobre cómo innovar y transferir habilidades al puesto de trabajo. Sus publicaciones académicas superan las 1.000 citas en Google Scholar.',
-      ],
-      audioText:
-        'La dirección académica combina investigación, experiencia internacional y diseño de programas orientados a transferir capacidades reales al puesto de trabajo.',
-    }
-  ];
+      {
+        day: "Martes",
+        start: "08:00",
+        end: "17:00",
+        breakMinutes: 60,
+        taxiPickupPoint: "Plaza de Puente Alto",
+        transferCost: 7400,
+      },
+      {
+        day: "Miercoles",
+        start: "08:00",
+        end: "17:00",
+        breakMinutes: 60,
+        taxiPickupPoint: "Plaza de Puente Alto",
+        transferCost: 7400,
+      },
+      {
+        day: "Jueves",
+        start: "08:00",
+        end: "17:00",
+        breakMinutes: 60,
+        taxiPickupPoint: "Plaza de Puente Alto",
+        transferCost: 7400,
+      },
+      {
+        day: "Viernes",
+        start: "08:00",
+        end: "16:00",
+        breakMinutes: 45,
+        taxiPickupPoint: "Plaza de Puente Alto",
+        transferCost: 7100,
+      },
+      {
+        day: "Sabado",
+        start: "",
+        end: "",
+        breakMinutes: 0,
+        taxiPickupPoint: "",
+        transferCost: 0,
+      },
+      {
+        day: "Domingo",
+        start: "",
+        end: "",
+        breakMinutes: 0,
+        taxiPickupPoint: "",
+        transferCost: 0,
+      },
+    ],
+  },
+  {
+    id: "tarde",
+    label: "Turno Tarde",
+    accent: "var(--late-accent)",
+    defaultRows: [
+      {
+        day: "Lunes",
+        start: "14:00",
+        end: "22:30",
+        breakMinutes: 30,
+        taxiPickupPoint: "Metro Pudahuel",
+        transferCost: 8600,
+      },
+      {
+        day: "Martes",
+        start: "14:00",
+        end: "22:30",
+        breakMinutes: 30,
+        taxiPickupPoint: "Metro Pudahuel",
+        transferCost: 8600,
+      },
+      {
+        day: "Miercoles",
+        start: "14:00",
+        end: "22:30",
+        breakMinutes: 30,
+        taxiPickupPoint: "Metro Pudahuel",
+        transferCost: 8600,
+      },
+      {
+        day: "Jueves",
+        start: "14:00",
+        end: "22:30",
+        breakMinutes: 30,
+        taxiPickupPoint: "Metro Pudahuel",
+        transferCost: 8600,
+      },
+      {
+        day: "Viernes",
+        start: "14:00",
+        end: "22:30",
+        breakMinutes: 45,
+        taxiPickupPoint: "Metro Pudahuel",
+        transferCost: 9100,
+      },
+      {
+        day: "Sabado",
+        start: "13:00",
+        end: "21:00",
+        breakMinutes: 30,
+        taxiPickupPoint: "Centro Maipu",
+        transferCost: 9700,
+      },
+      {
+        day: "Domingo",
+        start: "",
+        end: "",
+        breakMinutes: 0,
+        taxiPickupPoint: "",
+        transferCost: 0,
+      },
+    ],
+  },
+  {
+    id: "noche",
+    label: "Turno Noche",
+    accent: "var(--night-accent)",
+    defaultRows: [
+      {
+        day: "Lunes",
+        start: "22:00",
+        end: "07:00",
+        breakMinutes: 45,
+        taxiPickupPoint: "Base Quilicura",
+        transferCost: 12900,
+      },
+      {
+        day: "Martes",
+        start: "22:00",
+        end: "07:00",
+        breakMinutes: 45,
+        taxiPickupPoint: "Base Quilicura",
+        transferCost: 12900,
+      },
+      {
+        day: "Miercoles",
+        start: "22:00",
+        end: "07:00",
+        breakMinutes: 45,
+        taxiPickupPoint: "Base Quilicura",
+        transferCost: 12900,
+      },
+      {
+        day: "Jueves",
+        start: "22:00",
+        end: "07:00",
+        breakMinutes: 45,
+        taxiPickupPoint: "Base Quilicura",
+        transferCost: 12900,
+      },
+      {
+        day: "Viernes",
+        start: "22:00",
+        end: "07:00",
+        breakMinutes: 60,
+        taxiPickupPoint: "Base Quilicura",
+        transferCost: 13400,
+      },
+      {
+        day: "Sabado",
+        start: "22:30",
+        end: "07:30",
+        breakMinutes: 45,
+        taxiPickupPoint: "Terminal Norte",
+        transferCost: 14200,
+      },
+      {
+        day: "Domingo",
+        start: "",
+        end: "",
+        breakMinutes: 0,
+        taxiPickupPoint: "",
+        transferCost: 0,
+      },
+    ],
+  },
+];
 
-  
-  const [current, setCurrent] = useState(0);
-  const [tabSelections, setTabSelections] = useState({ 1: 0 });
-  const [openAccordions, setOpenAccordions] = useState({});
-  const [decision, setDecision] = useState('');
+const INITIAL_WORKERS = [
+  {
+    id: "wrk-1",
+    name: "Camila Soto",
+    shiftId: "administrativo",
+    area: "rrhh",
+    usesTaxi: true,
+    hasLunch: true,
+    vacationStart: "",
+    vacationEnd: "",
+  },
+  {
+    id: "wrk-2",
+    name: "Mauricio Rojas",
+    shiftId: "administrativo",
+    area: "finanzas",
+    usesTaxi: false,
+    hasLunch: true,
+    vacationStart: "2026-05-11",
+    vacationEnd: "2026-05-15",
+  },
+  {
+    id: "wrk-3",
+    name: "Daniela Vera",
+    shiftId: "dia",
+    area: "calidad",
+    usesTaxi: true,
+    hasLunch: true,
+    vacationStart: "",
+    vacationEnd: "",
+  },
+  {
+    id: "wrk-4",
+    name: "Ignacio Perez",
+    shiftId: "dia",
+    area: "planta",
+    usesTaxi: true,
+    hasLunch: false,
+    vacationStart: "",
+    vacationEnd: "",
+  },
+  {
+    id: "wrk-5",
+    name: "Fernanda Araya",
+    shiftId: "tarde",
+    area: "comercial",
+    usesTaxi: true,
+    hasLunch: true,
+    vacationStart: "",
+    vacationEnd: "",
+  },
+  {
+    id: "wrk-6",
+    name: "Jorge Carrasco",
+    shiftId: "tarde",
+    area: "bodega",
+    usesTaxi: false,
+    hasLunch: true,
+    vacationStart: "",
+    vacationEnd: "",
+  },
+  {
+    id: "wrk-7",
+    name: "Mariela Contreras",
+    shiftId: "noche",
+    area: "mantencion",
+    usesTaxi: true,
+    hasLunch: false,
+    vacationStart: "",
+    vacationEnd: "",
+  },
+  {
+    id: "wrk-8",
+    name: "Natalia Leiva",
+    shiftId: "noche",
+    area: "impresion",
+    usesTaxi: true,
+    hasLunch: false,
+    vacationStart: "",
+    vacationEnd: "",
+  },
+];
 
-  const screen = screens[current];
-  const progress = ((current + 1) / screens.length) * 100;
-  const isCompactBody = screen.id === 'P10' || screen.id === 'P01';
+const DEFAULT_WORKER_FORM = {
+  name: "",
+  shiftId: "administrativo",
+  area: "comercial",
+  usesTaxi: true,
+  hasLunch: true,
+  vacationStart: "",
+  vacationEnd: "",
+};
 
+const DEFAULT_AREA_OPTIONS = [
+  "comercial",
+  "bodega",
+  "planta",
+  "calidad",
+  "casino",
+  "aseo",
+  "rrhh",
+  "finanzas",
+  "adquisiciones",
+  "comercio exterior",
+  "deskartable concepcion",
+  "locales comerciales",
+  "mantencion",
+  "impresion",
+];
 
-
-
-  const next = () => {
-    setCurrent((c) => Math.min(c + 1, screens.length - 1));
-  };
-
-  const prev = () => {
-    setCurrent((c) => Math.max(c - 1, 0));
-  };
-
-  const renderInteraction = () => {
-    const interaction = screen.interaction;
-    if (!interaction) return null;
-
-    if (interaction.type === 'compare') {
-      return (
-        <div className="grid md:grid-cols-2 gap-4 mt-6">
-          <div className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.55)]">
-            <div className="mb-4 inline-flex rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-              Enfoque tradicional
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-3">{interaction.leftTitle}</h3>
-            <ul className="space-y-2 text-sm text-slate-600">
-              {interaction.leftPoints.map((p, i) => <li key={i}>• {p}</li>)}
-            </ul>
-          </div>
-          <div className="rounded-[28px] border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-white p-6 shadow-[0_24px_55px_-32px_rgba(234,88,12,0.45)]">
-            <div className="mb-4 inline-flex rounded-full bg-orange-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-700">
-              Propuesta STEC
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-3">{interaction.rightTitle}</h3>
-            <ul className="space-y-2 text-sm text-slate-700">
-              {interaction.rightPoints.map((p, i) => <li key={i}>• {p}</li>)}
-            </ul>
-          </div>
-        </div>
-      );
-    }
-
-    if (interaction.type === 'tabs') {
-      const selected = tabSelections[current] ?? 0;
-      return (
-        <div className="mt-8 rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_50px_-34px_rgba(15,23,42,0.45)]">
-          <div className="flex flex-wrap gap-2 mb-4">
-            {interaction.items.map((item, idx) => (
-              <button
-                key={idx}
-                onClick={() => setTabSelections((s) => ({ ...s, [current]: idx }))}
-                className={`px-4 py-2 rounded-full text-sm border transition ${selected === idx ? 'bg-orange-500 text-white border-orange-500 shadow-[0_12px_24px_-18px_rgba(249,115,22,0.9)]' : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-orange-200 hover:text-slate-900'}`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-          <div className="rounded-2xl bg-slate-50 px-5 py-4 text-slate-700 leading-relaxed">{interaction.items[selected].content}</div>
-        </div>
-      );
-    }
-
-    if (interaction.type === 'accordion') {
-      return (
-        <div className="mt-6 space-y-3">
-          {interaction.items.map((item, idx) => {
-            const key = `${current}-${idx}`;
-            const open = !!openAccordions[key];
-            return (
-              <div key={idx} className="rounded-[24px] border border-slate-200/80 bg-white shadow-[0_18px_35px_-28px_rgba(15,23,42,0.45)] overflow-hidden">
-                <button
-                  onClick={() => setOpenAccordions((s) => ({ ...s, [key]: !open }))}
-                  className="w-full flex items-center justify-between px-5 py-4 text-left transition hover:bg-slate-50"
-                >
-                  <span className="font-medium text-slate-900">{item.label}</span>
-                  <span className="text-slate-500">{open ? '−' : '+'}</span>
-                </button>
-                {open && <div className="px-5 pb-5 text-sm leading-relaxed text-slate-600">{item.content}</div>}
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-
-    if (interaction.type === 'cards') {
-      return (
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mt-8">
-          {interaction.items.map((item, idx) => (
-            <div key={idx} className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_50px_-34px_rgba(15,23,42,0.45)]">
-              <div className="mb-4 h-1.5 w-14 rounded-full bg-orange-500" />
-              <div className="text-sm uppercase tracking-[0.18em] text-slate-500 mb-3">{item.label}</div>
-              <div className="text-slate-700 leading-relaxed text-[15px]">{item.content}</div>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (interaction.type === 'timeline') {
-      return (
-        <div className="mt-8 grid md:grid-cols-3 gap-4">
-          {interaction.items.map((item, idx) => (
-            <div key={idx} className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_48px_-34px_rgba(15,23,42,0.45)] relative">
-              <div className="mb-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
-                {idx + 1}
-              </div>
-              <div className="font-semibold text-slate-900 mb-2">{item.label}</div>
-              <div className="text-slate-600 text-sm leading-relaxed">{item.content}</div>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (interaction.type === 'flow') {
-      return (
-        <div className="mt-8 grid md:grid-cols-4 gap-3">
-          {interaction.items.map((item, idx) => (
-            <div key={idx} className="rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.45)] text-sm text-slate-700">
-              <div className="mb-3 inline-flex rounded-full bg-orange-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-700">
-                Paso {idx + 1}
-              </div>
-              {item}
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (interaction.type === 'steps') {
-      return (
-        <div className="mt-6 space-y-3">
-          {interaction.items.map((item, idx) => (
-            <div key={idx} className="rounded-2xl border bg-white p-5 shadow-sm flex gap-4 items-start">
-              <div className="h-8 w-8 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-semibold">{idx + 1}</div>
-              <div>
-                <div className="font-semibold">{item.label}</div>
-                <div className="text-slate-700 text-sm mt-1">{item.content}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (interaction.type === 'decision') {
-      const selected = interaction.options.find((o) => o.label === decision);
-      return (
-        <div className="mt-8 rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_50px_-34px_rgba(15,23,42,0.45)]">
-          <div className="font-semibold text-slate-900 mb-4">{interaction.question}</div>
-          <div className="flex flex-wrap gap-3">
-            {interaction.options.map((option, idx) => (
-              <button
-                key={idx}
-                onClick={() => setDecision(option.label)}
-                className={`px-4 py-2 rounded-full border text-sm transition ${decision === option.label ? 'bg-orange-500 text-white border-orange-500 shadow-[0_12px_24px_-18px_rgba(249,115,22,0.9)]' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-orange-200'}`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          {selected && (
-            <div className="mt-4 p-4 rounded-2xl bg-orange-50 text-slate-700 text-sm leading-relaxed">
-              {selected.feedback}
-            </div>
-          )}
-        </div>
-      );
-    }
-
+function timeStringToMinutes(value) {
+  if (!value || !value.includes(":")) {
     return null;
+  }
+
+  const [hours, minutes] = value.split(":").map(Number);
+
+  if (
+    Number.isNaN(hours) ||
+    Number.isNaN(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return null;
+  }
+
+  return hours * 60 + minutes;
+}
+
+function formatMinutesAsHours(totalMinutes) {
+  if (typeof totalMinutes !== "number" || Number.isNaN(totalMinutes)) {
+    return "--";
+  }
+
+  const sign = totalMinutes < 0 ? "-" : "";
+  const absoluteMinutes = Math.abs(totalMinutes);
+  const hours = Math.floor(absoluteMinutes / 60);
+  const minutes = absoluteMinutes % 60;
+
+  return `${sign}${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+    2,
+    "0"
+  )}`;
+}
+
+function formatCurrency(value) {
+  const normalizedValue = Number(value);
+
+  if (Number.isNaN(normalizedValue) || normalizedValue <= 0) {
+    return "--";
+  }
+
+  return currencyFormatter.format(normalizedValue);
+}
+
+function getCurrentMonthMetadata() {
+  const today = new Date();
+  return {
+    year: today.getFullYear(),
+    month: today.getMonth(),
+    monthLabel: today.toLocaleDateString("es-CL", {
+      month: "long",
+      year: "numeric",
+    }),
+  };
+}
+
+function getMondayBasedDayIndex(date) {
+  return (date.getDay() + 6) % 7;
+}
+
+function getActiveBusinessDayIndexes(allRowsByTab) {
+  const activeDayIndexes = new Set();
+
+  Object.values(allRowsByTab).forEach((rows) => {
+    rows.forEach((row, rowIndex) => {
+      if (rowIndex > 4) {
+        return;
+      }
+
+      if (row.start && row.end) {
+        activeDayIndexes.add(rowIndex);
+      }
+    });
+  });
+
+  return activeDayIndexes;
+}
+
+function calculateMonthlyTransferProjection(allRowsByTab) {
+  const { year, month, monthLabel } = getCurrentMonthMetadata();
+  const activeBusinessDays = getActiveBusinessDayIndexes(allRowsByTab);
+
+  if (activeBusinessDays.size === 0) {
+    return {
+      totalCost: 0,
+      firstActiveLabel: "--",
+      lastActiveLabel: "--",
+      monthLabel,
+    };
+  }
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  let firstActiveDate = null;
+  let lastActiveDate = null;
+  let totalCost = 0;
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const currentDate = new Date(year, month, day);
+    const businessDayIndex = getMondayBasedDayIndex(currentDate);
+
+    if (!activeBusinessDays.has(businessDayIndex)) {
+      continue;
+    }
+
+    if (!firstActiveDate) {
+      firstActiveDate = currentDate;
+    }
+
+    lastActiveDate = currentDate;
+    const dailyCost = Object.values(allRowsByTab).reduce((sum, rows) => {
+      const row = rows[businessDayIndex];
+
+      if (!row || !row.start || !row.end) {
+        return sum;
+      }
+
+      const rowCost = Number(row.transferCost);
+
+      return !Number.isNaN(rowCost) && rowCost > 0 ? sum + rowCost : sum;
+    }, 0);
+
+    totalCost += dailyCost;
+  }
+
+  const formatDateLabel = (value) =>
+    value
+      ? value.toLocaleDateString("es-CL", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : "--";
+
+  return {
+    totalCost,
+    firstActiveLabel: formatDateLabel(firstActiveDate),
+    lastActiveLabel: formatDateLabel(lastActiveDate),
+    monthLabel,
+  };
+}
+
+function getDurationMinutes(startMinutes, endMinutes) {
+  if (startMinutes === null || endMinutes === null) {
+    return null;
+  }
+
+  if (endMinutes >= startMinutes) {
+    return endMinutes - startMinutes;
+  }
+
+  return 24 * 60 - startMinutes + endMinutes;
+}
+
+function calculateEffectiveHours(startTime, endTime, breakMinutes) {
+  const startMinutes = timeStringToMinutes(startTime);
+  const endMinutes = timeStringToMinutes(endTime);
+  const shiftMinutes = getDurationMinutes(startMinutes, endMinutes);
+  const normalizedBreak = Number(breakMinutes);
+
+  if (shiftMinutes === null || Number.isNaN(normalizedBreak)) {
+    return null;
+  }
+
+  return shiftMinutes - normalizedBreak;
+}
+
+function calculateTaxiTime(baseTime, minuteOffset, dayIndex) {
+  const baseMinutes = timeStringToMinutes(baseTime);
+  const normalizedOffset = Number(minuteOffset);
+
+  if (baseMinutes === null || Number.isNaN(normalizedOffset)) {
+    return null;
+  }
+
+  const rawMinutes = baseMinutes + normalizedOffset;
+  const dayOffset = Math.floor(rawMinutes / (24 * 60));
+  const wrappedMinutes = ((rawMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
+  const computedDayIndex = (dayIndex + dayOffset + DAYS.length) % DAYS.length;
+
+  return {
+    time: formatMinutesAsHours(wrappedMinutes),
+    dayLabel: DAYS[computedDayIndex],
+    crossesDay: dayOffset !== 0,
+  };
+}
+
+function createInitialRows(rows) {
+  return rows.map((row) => ({
+    ...row,
+    breakMinutes: String(row.breakMinutes),
+    transferCost: String(row.transferCost),
+  }));
+}
+
+function buildInitialTabState() {
+  return TAB_CONFIGS.reduce((accumulator, tab) => {
+    accumulator[tab.id] = createInitialRows(tab.defaultRows);
+    return accumulator;
+  }, {});
+}
+
+function buildInitialWorkersState() {
+  return INITIAL_WORKERS;
+}
+
+function normalizeImportedWorkers(rawWorkers) {
+  if (Array.isArray(rawWorkers)) {
+    return rawWorkers
+      .filter((worker) => typeof worker?.name === "string" && worker.name.trim())
+      .map((worker, index) => ({
+        id: worker.id || `wrk-${index + 1}`,
+        name: worker.name.trim(),
+        shiftId: TAB_CONFIGS.some((tab) => tab.id === worker.shiftId)
+          ? worker.shiftId
+          : "administrativo",
+        area: typeof worker.area === "string" && worker.area.trim()
+          ? worker.area.trim().toLowerCase()
+          : "comercial",
+        usesTaxi: Boolean(worker.usesTaxi),
+        hasLunch:
+          worker.hasLunch === undefined ? true : Boolean(worker.hasLunch),
+        vacationStart:
+          typeof worker.vacationStart === "string" ? worker.vacationStart : "",
+        vacationEnd:
+          typeof worker.vacationEnd === "string" ? worker.vacationEnd : "",
+      }));
+  }
+
+  return TAB_CONFIGS.flatMap((tab) => {
+    const importedWorkers = Array.isArray(rawWorkers?.[tab.id])
+      ? rawWorkers[tab.id]
+      : [];
+
+    return importedWorkers
+      .filter((worker) => typeof worker?.name === "string" && worker.name.trim())
+      .map((worker, index) => ({
+        id: worker.id || `${tab.id}-${index + 1}`,
+        name: worker.name.trim(),
+        shiftId: tab.id,
+        area: "comercial",
+        usesTaxi: Boolean(worker.usesTaxi),
+        hasLunch: true,
+        vacationStart: "",
+        vacationEnd: "",
+      }));
+  });
+}
+
+function normalizeImportedAreaOptions(rawAreas, workers) {
+  const baseAreas = Array.isArray(rawAreas)
+    ? rawAreas
+        .filter((area) => typeof area === "string" && area.trim())
+        .map((area) => area.trim().toLowerCase())
+    : [];
+  const workerAreas = workers
+    .map((worker) => worker.area)
+    .filter((area) => typeof area === "string" && area.trim());
+
+  return Array.from(new Set([...DEFAULT_AREA_OPTIONS, ...baseAreas, ...workerAreas]));
+}
+
+function getShiftLabel(shiftId) {
+  const label = TAB_CONFIGS.find((tab) => tab.id === shiftId)?.label || shiftId;
+  return label.replace(/^Turno\s+/i, "");
+}
+
+function hasVacationScheduled(worker) {
+  return Boolean(worker.vacationStart || worker.vacationEnd);
+}
+
+function normalizeImportedRow(row, fallbackDay) {
+  return {
+    day: row?.day || fallbackDay,
+    start: typeof row?.start === "string" ? row.start : "",
+    end: typeof row?.end === "string" ? row.end : "",
+    breakMinutes:
+      row?.breakMinutes !== undefined ? String(row.breakMinutes) : "0",
+    taxiPickupPoint:
+      typeof row?.taxiPickupPoint === "string" ? row.taxiPickupPoint : "",
+    transferCost:
+      row?.transferCost !== undefined ? String(row.transferCost) : "0",
+  };
+}
+
+function normalizeImportedTabState(rawTabs) {
+  return TAB_CONFIGS.reduce((accumulator, tab) => {
+    const importedRows = Array.isArray(rawTabs?.[tab.id]) ? rawTabs[tab.id] : [];
+
+    accumulator[tab.id] = DAYS.map((day, index) =>
+      normalizeImportedRow(importedRows[index], day)
+    );
+
+    return accumulator;
+  }, {});
+}
+
+function buildExportPayload({
+  activeTab,
+  taxiLeadMinutes,
+  taxiReturnMinutes,
+  tabState,
+  workerState,
+  areaOptions,
+}) {
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    activeTab,
+    taxiLeadMinutes,
+    taxiReturnMinutes,
+    tabs: tabState,
+    workers: workerState,
+    areaOptions,
+  };
+}
+
+function downloadJsonFile(payload, filename) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json",
+  });
+
+  downloadBlob(blob, filename);
+}
+
+function getRowValidation(row) {
+  const startMinutes = timeStringToMinutes(row.start);
+  const endMinutes = timeStringToMinutes(row.end);
+  const breakMinutes = Number(row.breakMinutes);
+  const transferCost = Number(row.transferCost);
+
+  if (!row.start && !row.end) {
+    return "";
+  }
+
+  if (startMinutes === null || endMinutes === null) {
+    return "Completa entrada y salida.";
+  }
+
+  if (Number.isNaN(breakMinutes) || breakMinutes < 0) {
+    return "La colacion debe ser un numero positivo.";
+  }
+
+  if (!row.taxiPickupPoint.trim()) {
+    return "Indica el punto de salida del taxi.";
+  }
+
+  if (Number.isNaN(transferCost) || transferCost < 0) {
+    return "El costo debe ser un numero positivo.";
+  }
+
+  const effectiveMinutes = calculateEffectiveHours(
+    row.start,
+    row.end,
+    row.breakMinutes
+  );
+
+  if (effectiveMinutes !== null && effectiveMinutes < 0) {
+    return "La colacion supera la duracion del turno.";
+  }
+
+  return "";
+}
+
+function escapePdfText(value) {
+  return String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)")
+    .replace(/\r/g, "")
+    .replace(/\n/g, " ");
+}
+
+function wrapPdfLine(line, maxChars = PDF_MAX_CHARS) {
+  if (line.length <= maxChars) {
+    return [line];
+  }
+
+  const words = line.split(" ");
+  const wrapped = [];
+  let current = "";
+
+  words.forEach((word) => {
+    const next = current ? `${current} ${word}` : word;
+
+    if (next.length > maxChars) {
+      if (current) {
+        wrapped.push(current);
+      }
+
+      current = word;
+      return;
+    }
+
+    current = next;
+  });
+
+  if (current) {
+    wrapped.push(current);
+  }
+
+  return wrapped;
+}
+
+function paginatePdfLines(lines) {
+  const expandedLines = lines.flatMap((line) => wrapPdfLine(line));
+  const pages = [];
+
+  for (let index = 0; index < expandedLines.length; index += PDF_LINES_PER_PAGE) {
+    pages.push(expandedLines.slice(index, index + PDF_LINES_PER_PAGE));
+  }
+
+  return pages.length ? pages : [["Sin informacion para exportar."]];
+}
+
+function buildPdfBlob(linesByPage) {
+  const encoder = new TextEncoder();
+  const fontObjectId = 3;
+  const firstContentObjectId = 4;
+  const firstPageObjectId = firstContentObjectId + linesByPage.length;
+  const pageObjectIds = linesByPage.map(
+    (_, index) => firstPageObjectId + index
+  );
+  const contentObjectIds = linesByPage.map(
+    (_, index) => firstContentObjectId + index
+  );
+  const objects = [];
+
+  objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+  objects[2] = `<< /Type /Pages /Count ${pageObjectIds.length} /Kids [${pageObjectIds
+    .map((pageId) => `${pageId} 0 R`)
+    .join(" ")}] >>`;
+  objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
+
+  linesByPage.forEach((pageLines, index) => {
+    const textCommands = [
+      "BT",
+      "/F1 11 Tf",
+      `${PDF_MARGIN_X} ${PDF_START_Y} Td`,
+      `${PDF_LINE_HEIGHT} TL`,
+      ...pageLines.map((line, lineIndex) =>
+        lineIndex === 0
+          ? `(${escapePdfText(line)}) Tj`
+          : `T* (${escapePdfText(line)}) Tj`
+      ),
+      "ET",
+    ];
+    const stream = textCommands.join("\n");
+    const streamLength = encoder.encode(stream).length;
+    const contentObjectId = contentObjectIds[index];
+    const pageObjectId = pageObjectIds[index];
+
+    objects[contentObjectId] =
+      `<< /Length ${streamLength} >>\nstream\n${stream}\nendstream`;
+    objects[pageObjectId] =
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PDF_PAGE_WIDTH} ${PDF_PAGE_HEIGHT}] /Resources << /Font << /F1 ${fontObjectId} 0 R >> >> /Contents ${contentObjectId} 0 R >>`;
+  });
+
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+
+  for (let objectId = 1; objectId < objects.length; objectId += 1) {
+    offsets[objectId] = encoder.encode(pdf).length;
+    pdf += `${objectId} 0 obj\n${objects[objectId]}\nendobj\n`;
+  }
+
+  const xrefOffset = encoder.encode(pdf).length;
+  pdf += `xref\n0 ${objects.length}\n`;
+  pdf += "0000000000 65535 f \n";
+  for (let objectId = 1; objectId < objects.length; objectId += 1) {
+    pdf += `${String(offsets[objectId]).padStart(10, "0")} 00000 n \n`;
+  }
+  pdf += `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+
+  return new Blob([pdf], { type: "application/pdf" });
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  setTimeout(() => URL.revokeObjectURL(url), 300);
+}
+
+function buildTurnPdfLines({
+  tabLabel,
+  rows,
+  taxiLeadMinutes,
+  taxiReturnMinutes,
+  includeHeader = true,
+}) {
+  const lines = [];
+
+  if (includeHeader) {
+    lines.push(`Planificador de turnos - ${tabLabel}`);
+    lines.push(`Generado el ${new Date().toLocaleDateString("es-CL")}`);
+    lines.push("");
+  }
+
+  rows.forEach((row, rowIndex) => {
+    const taxiToWork = calculateTaxiTime(row.start, -Number(taxiLeadMinutes), rowIndex);
+    const taxiFromWork = calculateTaxiTime(
+      row.end,
+      Number(taxiReturnMinutes),
+      rowIndex
+    );
+
+    lines.push(`${row.day}`);
+    lines.push(`Entrada: ${row.start || "--"} | Salida: ${row.end || "--"}`);
+    lines.push(`Punto de salida del taxi: ${row.taxiPickupPoint || "--"}`);
+    lines.push(
+      `Taxi hacia el lugar de trabajo: ${taxiToWork ? `${taxiToWork.time} desde ${taxiToWork.dayLabel}` : "--"}`
+    );
+    lines.push(
+      `Taxi desde el lugar de trabajo: ${taxiFromWork ? `${taxiFromWork.time} hacia ${row.taxiPickupPoint || "--"} (${taxiFromWork.dayLabel})` : "--"}`
+    );
+    lines.push("");
+  });
+
+  return lines;
+}
+
+function App() {
+  const [activeSection, setActiveSection] = useState("turnos");
+  const [activeTab, setActiveTab] = useState(TAB_CONFIGS[0].id);
+  const [taxiLeadMinutes, setTaxiLeadMinutes] = useState("45");
+  const [taxiReturnMinutes, setTaxiReturnMinutes] = useState("15");
+  const [tabState, setTabState] = useState(buildInitialTabState);
+  const [workerState, setWorkerState] = useState(buildInitialWorkersState);
+  const [areaOptions, setAreaOptions] = useState(DEFAULT_AREA_OPTIONS);
+  const [workerForm, setWorkerForm] = useState(DEFAULT_WORKER_FORM);
+  const [areaDraft, setAreaDraft] = useState("");
+  const [fileMessage, setFileMessage] = useState("");
+
+  const activeConfig = TAB_CONFIGS.find((tab) => tab.id === activeTab);
+  const activeRows = tabState[activeTab];
+  const activeWorkers = workerState.filter(
+    (worker) => worker.shiftId === activeTab
+  );
+  const activeAvailableWorkers = activeWorkers.filter(
+    (worker) => !hasVacationScheduled(worker)
+  );
+  const activeTaxiWorkersCount = activeAvailableWorkers.filter(
+    (worker) => worker.usesTaxi
+  ).length;
+  const activeLunchWorkersCount = activeAvailableWorkers.filter(
+    (worker) => worker.hasLunch
+  ).length;
+  const workingWorkersCount = workerState.filter(
+    (worker) => !hasVacationScheduled(worker)
+  ).length;
+  const lunchWorkersCount = workerState.filter(
+    (worker) => !hasVacationScheduled(worker) && worker.hasLunch
+  ).length;
+  const taxiWorkersCount = workerState.filter(
+    (worker) => !hasVacationScheduled(worker) && worker.usesTaxi
+  ).length;
+  const vacationWorkersCount = workerState.filter((worker) =>
+    hasVacationScheduled(worker)
+  ).length;
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+  };
+
+  const handleSectionChange = (sectionId) => {
+    setActiveSection(sectionId);
+  };
+
+  const handleGlobalNumberChange = (setter) => (event) => {
+    const nextValue = event.target.value;
+
+    if (nextValue === "") {
+      setter("");
+      return;
+    }
+
+    const numericValue = Number(nextValue);
+
+    if (Number.isNaN(numericValue) || numericValue < 0) {
+      return;
+    }
+
+    setter(String(numericValue));
+  };
+
+  const updateTabCell = (tabId, rowIndex, field, value) => {
+    setTabState((previousState) => ({
+      ...previousState,
+      [tabId]: previousState[tabId].map((row, currentIndex) =>
+        currentIndex === rowIndex ? { ...row, [field]: value } : row
+      ),
+    }));
+  };
+
+  const weeklyTotalMinutes = useMemo(
+    () =>
+      activeRows.reduce((total, row) => {
+        const effectiveMinutes = calculateEffectiveHours(
+          row.start,
+          row.end,
+          row.breakMinutes
+        );
+
+        if (effectiveMinutes === null || effectiveMinutes < 0) {
+          return total;
+        }
+
+        return total + effectiveMinutes;
+      }, 0),
+    [activeRows]
+  );
+
+  const weeklyTransferCost = useMemo(
+    () =>
+      activeRows.reduce((total, row) => {
+        const value = Number(row.transferCost);
+        return Number.isNaN(value) || value < 0 ? total : total + value;
+      }, 0),
+    [activeRows]
+  );
+
+  const weeklyLimitExceeded = weeklyTotalMinutes > 42 * 60;
+  const monthlyProjection = useMemo(
+    () => calculateMonthlyTransferProjection(tabState),
+    [tabState]
+  );
+
+  const downloadSingleTurnPdf = (tabConfig) => {
+    const lines = buildTurnPdfLines({
+      tabLabel: tabConfig.label,
+      rows: tabState[tabConfig.id],
+      taxiLeadMinutes,
+      taxiReturnMinutes,
+    });
+
+    const blob = buildPdfBlob(paginatePdfLines(lines));
+    downloadBlob(blob, `${tabConfig.label.toLowerCase().replace(/\s+/g, "-")}.pdf`);
+  };
+
+  const downloadAllTurnsPdf = () => {
+    const lines = TAB_CONFIGS.flatMap((tabConfig, index) => {
+      const sectionLines = buildTurnPdfLines({
+        tabLabel: tabConfig.label,
+        rows: tabState[tabConfig.id],
+        taxiLeadMinutes,
+        taxiReturnMinutes,
+        includeHeader: index === 0,
+      });
+
+      return index === 0
+        ? sectionLines
+        : ["", "----------------------------------------", "", ...sectionLines];
+    });
+
+    const blob = buildPdfBlob(paginatePdfLines(lines));
+    downloadBlob(blob, "todos-los-turnos.pdf");
+  };
+
+  const exportPlanningFile = () => {
+    const payload = buildExportPayload({
+      activeTab,
+      taxiLeadMinutes,
+      taxiReturnMinutes,
+      tabState,
+      workerState,
+      areaOptions,
+    });
+
+    const exportDate = new Date().toISOString().slice(0, 10);
+    downloadJsonFile(payload, `planificacion-turnos-${exportDate}.json`);
+    setFileMessage("Planificacion exportada correctamente.");
+  };
+
+  const importPlanningFile = async (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+
+      if (!parsed || typeof parsed !== "object" || !parsed.tabs) {
+        throw new Error("Archivo invalido");
+      }
+
+      const normalizedTabs = normalizeImportedTabState(parsed.tabs);
+      const normalizedWorkers = normalizeImportedWorkers(parsed.workers);
+      const normalizedAreas = normalizeImportedAreaOptions(
+        parsed.areaOptions,
+        normalizedWorkers
+      );
+      setTabState(normalizedTabs);
+      setWorkerState(normalizedWorkers);
+      setAreaOptions(normalizedAreas);
+      setTaxiLeadMinutes(
+        parsed.taxiLeadMinutes !== undefined
+          ? String(parsed.taxiLeadMinutes)
+          : "45"
+      );
+      setTaxiReturnMinutes(
+        parsed.taxiReturnMinutes !== undefined
+          ? String(parsed.taxiReturnMinutes)
+          : "15"
+      );
+      setActiveTab(
+        TAB_CONFIGS.some((tab) => tab.id === parsed.activeTab)
+          ? parsed.activeTab
+          : TAB_CONFIGS[0].id
+      );
+      setFileMessage("Planificacion importada correctamente.");
+    } catch (error) {
+      setFileMessage(
+        "No se pudo importar el archivo. Verifica que sea una planificacion valida."
+      );
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  const updateWorkerForm = (field, value) => {
+    setWorkerForm((previousState) => ({
+      ...previousState,
+      [field]: value,
+    }));
+  };
+
+  const addWorker = () => {
+    const normalizedName = workerForm.name.trim();
+
+    if (!normalizedName) {
+      setFileMessage("Ingresa un nombre de trabajador antes de agregarlo.");
+      return;
+    }
+
+    setWorkerState((previousState) => [
+      ...previousState,
+      {
+        id: `wrk-${Date.now()}`,
+        name: normalizedName,
+        shiftId: workerForm.shiftId,
+        area: workerForm.area,
+        usesTaxi: workerForm.usesTaxi,
+        hasLunch: workerForm.hasLunch,
+        vacationStart: workerForm.vacationStart,
+        vacationEnd: workerForm.vacationEnd,
+      },
+    ]);
+    setAreaOptions((previousState) =>
+      previousState.includes(workerForm.area)
+        ? previousState
+        : [...previousState, workerForm.area]
+    );
+    setWorkerForm(DEFAULT_WORKER_FORM);
+    setFileMessage("Trabajador agregado al padron.");
+  };
+
+  const updateWorkerField = (workerId, field, value) => {
+    setWorkerState((previousState) =>
+      previousState.map((worker) =>
+        worker.id === workerId ? { ...worker, [field]: value } : worker
+      )
+    );
+  };
+
+  const removeWorker = (workerId) => {
+    setWorkerState((previousState) =>
+      previousState.filter((worker) => worker.id !== workerId)
+    );
+  };
+
+  const addAreaOption = () => {
+    const normalizedArea = areaDraft.trim().toLowerCase();
+
+    if (!normalizedArea) {
+      setFileMessage("Ingresa un area antes de agregarla.");
+      return;
+    }
+
+    if (areaOptions.includes(normalizedArea)) {
+      setFileMessage("Esa area ya existe.");
+      return;
+    }
+
+    setAreaOptions((previousState) => [...previousState, normalizedArea]);
+    setAreaDraft("");
+    setFileMessage("Area agregada correctamente.");
+  };
+
+  const removeAreaOption = (areaToRemove) => {
+    setAreaOptions((previousState) =>
+      previousState.filter((area) => area !== areaToRemove)
+    );
+    setWorkerState((previousState) =>
+      previousState.map((worker) =>
+        worker.area === areaToRemove
+          ? { ...worker, area: DEFAULT_WORKER_FORM.area }
+          : worker
+      )
+    );
+    setFileMessage("Area eliminada y trabajadores reasignados a comercial.");
   };
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#fffaf5_0%,#f8fafc_28%,#f8fafc_100%)] text-slate-900">
-      <div className="max-w-7xl mx-auto px-4 py-6 md:px-8 md:py-10">
-        <div className="overflow-hidden rounded-[36px] border border-white/70 bg-white/85 shadow-[0_40px_120px_-55px_rgba(15,23,42,0.42)] backdrop-blur">
-          <div className="relative overflow-hidden bg-[linear-gradient(135deg,#0f172a_0%,#172033_56%,#1f2937_100%)] text-white px-6 py-8 md:px-10 md:py-10">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.22),transparent_28%),radial-gradient(circle_at_left,rgba(255,255,255,0.07),transparent_24%)]" />
-            <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-              <div>
-                <div className="mb-4 inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-200">
-                  Propuesta preparada por el Centro de Liderazgo STEC
-                </div>
-                <h1 className="max-w-4xl text-3xl font-semibold leading-tight md:text-5xl">
-                  Programa de Desarrollo de Ejecutivos. Propuesta elaborada para{' '}
-                  <a
-                    href="https://www.generadora.cl/noticias/generadora-metropolitana-es-la-7-mejor-empresa-para-trabajar-en-chile/"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-orange-400 hover:text-orange-300"
-                  >
-                    Generadora Metropolitana
-                  </a>
-                  .
-                </h1>
-                <p className="mt-4 max-w-3xl text-sm leading-relaxed text-slate-300 md:text-base">
-                  Una presentación comercial diseñada para alinear desarrollo ejecutivo, transferencia al puesto de trabajo y resultados de negocio.
-                </p>
-              </div>
-              <div className="rounded-[28px] border border-white/10 bg-white/8 px-5 py-4 text-sm backdrop-blur-sm">
-                <div className="text-[11px] uppercase tracking-[0.24em] text-slate-300">Pantalla actual</div>
-                <div className="mt-2 text-2xl font-semibold">{screen.id}</div>
-              </div>
-            </div>
-            <div className="relative mt-8">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                <div className="h-full rounded-full bg-orange-500 transition-all duration-300" style={{ width: `${progress}%` }} />
-              </div>
-              <div className="mt-3 text-sm text-slate-300">{current + 1} de {screens.length}</div>
-            </div>
+    <div className="scheduler-app">
+      <header className="hero-panel">
+        <div className="hero-copy-block">
+          <div className="hero-topline">
+            <span className="eyebrow">Planificador semanal</span>
+            <span className="hero-kicker">
+              Dotacion organizada en {TAB_CONFIGS.length} turnos
+            </span>
           </div>
+          <h1>Turnos laborales con calculo automatico de horas y taxi</h1>
+          <p className="hero-copy">
+            Edita turnos y revisa al instante horas efectivas, salida de taxi,
+            costo semanal y baja reportes PDF.
+          </p>
 
-          <div className="grid lg:grid-cols-[300px_1fr] gap-0">
-            <aside className="border-r border-slate-200/80 bg-[linear-gradient(180deg,#f8fafc_0%,#fff7ed_100%)] p-5 md:p-6">
-              <div className="mb-5 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Navegación</div>
-              <div className="space-y-2.5">
-                {screens.map((item, idx) => (
+          <div className="hero-actions">
+            <div className="action-row">
+              <button
+                type="button"
+                className="action-button secondary"
+                onClick={exportPlanningFile}
+              >
+                Exportar planificacion
+              </button>
+              <label className="action-button secondary file-button">
+                Importar planificacion
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  onChange={importPlanningFile}
+                />
+              </label>
+              <button
+                type="button"
+                className="action-button"
+                onClick={() => downloadSingleTurnPdf(activeConfig)}
+              >
+                Descargar PDF del turno
+              </button>
+              <button
+                type="button"
+                className="action-button secondary"
+                onClick={downloadAllTurnsPdf}
+              >
+                Descargar PDF de todos los turnos
+              </button>
+            </div>
+            {fileMessage ? <span className="file-message">{fileMessage}</span> : null}
+          </div>
+        </div>
+
+        <div className="hero-metrics">
+          <div className="summary-card">
+            <p className="summary-inline">
+              <span>Vista activa</span> <strong>{activeConfig.label}</strong>
+            </p>
+            <div className="summary-stack">
+              <div className="summary-row">
+                <span>Total semanal</span>
+                <strong>{formatMinutesAsHours(weeklyTotalMinutes)}</strong>
+              </div>
+              <div className="summary-row">
+                <span>Costo semanal</span>
+                <strong>{formatCurrency(weeklyTransferCost)}</strong>
+              </div>
+              <div className="summary-row feature">
+                <span>Total mensual 4 turnos</span>
+                <strong>{formatCurrency(monthlyProjection.totalCost)}</strong>
+              </div>
+            </div>
+            <p className="summary-footnote-inline">
+              Periodo considerado {monthlyProjection.firstActiveLabel} al{" "}
+              {monthlyProjection.lastActiveLabel} {monthlyProjection.monthLabel}
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <main className="workspace-shell">
+        <section className="section-switcher" aria-label="Vistas principales">
+          <button
+            type="button"
+            className={`section-button ${activeSection === "turnos" ? "active" : ""}`}
+            onClick={() => handleSectionChange("turnos")}
+          >
+            Turnos
+          </button>
+          <button
+            type="button"
+            className={`section-button ${
+              activeSection === "trabajadores" ? "active" : ""
+            }`}
+            onClick={() => handleSectionChange("trabajadores")}
+          >
+            Trabajadores
+          </button>
+        </section>
+
+        {activeSection === "turnos" ? (
+          <section className="turns-view">
+            <section className="tab-row" aria-label="Turnos disponibles">
+              {TAB_CONFIGS.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`tab-button ${tab.id === activeTab ? "active" : ""}`}
+                  style={
+                    tab.id === activeTab
+                      ? { "--tab-accent": tab.accent }
+                      : undefined
+                  }
+                  onClick={() => handleTabChange(tab.id)}
+                >
+                  <span>{tab.label}</span>
+                  <small>
+                    {formatMinutesAsHours(
+                      tabState[tab.id].reduce((total, row) => {
+                        const rowMinutes = calculateEffectiveHours(
+                          row.start,
+                          row.end,
+                          row.breakMinutes
+                        );
+
+                        return rowMinutes && rowMinutes > 0
+                          ? total + rowMinutes
+                          : total;
+                      }, 0)
+                    )}
+                  </small>
+                </button>
+              ))}
+            </section>
+
+            <section className="table-card">
+              <div className="table-header">
+              <div>
+                  <span className="section-tag">{activeConfig.label}</span>
+              </div>
+              </div>
+
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Dia</th>
+                      <th>Hora Entrada</th>
+                      <th>Hora Salida</th>
+                      <th>Colacion (min)</th>
+                      <th>Horas Efectivas</th>
+                      <th>Punto Salida Taxi</th>
+                      <th>Taxi Hacia Trabajo</th>
+                      <th>Taxi Desde Trabajo</th>
+                      <th>Costo Traslado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeRows.map((row, rowIndex) => {
+                      const effectiveMinutes = calculateEffectiveHours(
+                        row.start,
+                        row.end,
+                        row.breakMinutes
+                      );
+                      const taxiToWork = calculateTaxiTime(
+                        row.start,
+                        -Number(taxiLeadMinutes),
+                        rowIndex
+                      );
+                      const taxiFromWork = calculateTaxiTime(
+                        row.end,
+                        Number(taxiReturnMinutes),
+                        rowIndex
+                      );
+                      const validationMessage = getRowValidation(row);
+
+                      return (
+                        <tr
+                          key={`${activeTab}-${row.day}`}
+                          className={validationMessage ? "row-has-error" : ""}
+                        >
+                          <td>
+                            <div className="day-cell">
+                              <strong>{row.day}</strong>
+                              {validationMessage ? (
+                                <span className="inline-error">
+                                  {validationMessage}
+                                </span>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td>
+                            <input
+                              type="time"
+                              value={row.start}
+                              onChange={(event) =>
+                                updateTabCell(
+                                  activeTab,
+                                  rowIndex,
+                                  "start",
+                                  event.target.value
+                                )
+                              }
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="time"
+                              value={row.end}
+                              onChange={(event) =>
+                                updateTabCell(
+                                  activeTab,
+                                  rowIndex,
+                                  "end",
+                                  event.target.value
+                                )
+                              }
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              min="0"
+                              step="5"
+                              value={row.breakMinutes}
+                              onChange={(event) =>
+                                updateTabCell(
+                                  activeTab,
+                                  rowIndex,
+                                  "breakMinutes",
+                                  event.target.value
+                                )
+                              }
+                            />
+                          </td>
+                          <td>
+                            <span
+                              className={`calculated-pill ${
+                                effectiveMinutes !== null && effectiveMinutes < 0
+                                  ? "negative"
+                                  : ""
+                              }`}
+                            >
+                              {effectiveMinutes === null
+                                ? "--"
+                                : formatMinutesAsHours(effectiveMinutes)}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="pickup-cell">
+                              <input
+                                type="text"
+                                value={row.taxiPickupPoint}
+                                placeholder="Ej: Metro Los Heroes"
+                                onChange={(event) =>
+                                  updateTabCell(
+                                    activeTab,
+                                    rowIndex,
+                                    "taxiPickupPoint",
+                                    event.target.value
+                                  )
+                                }
+                              />
+                              <span className="pickup-meta">
+                                {activeTaxiWorkersCount} personas en este trayecto
+                              </span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="taxi-cell">
+                              <strong>{taxiToWork ? taxiToWork.time : "--"}</strong>
+                              <span>
+                                {taxiToWork
+                                  ? `Desde ${
+                                      row.taxiPickupPoint || "punto pendiente"
+                                    }`
+                                  : "Sin dato"}
+                              </span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="taxi-cell">
+                              <strong>
+                                {taxiFromWork ? taxiFromWork.time : "--"}
+                              </strong>
+                              <span>
+                                {taxiFromWork
+                                  ? `Hacia ${
+                                      row.taxiPickupPoint || "destino pendiente"
+                                    }`
+                                  : "Sin dato"}
+                              </span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="cost-cell">
+                              <input
+                                type="number"
+                                min="0"
+                                step="100"
+                                value={row.transferCost}
+                                onChange={(event) =>
+                                  updateTabCell(
+                                    activeTab,
+                                    rowIndex,
+                                    "transferCost",
+                                    event.target.value
+                                  )
+                                }
+                              />
+                              <span>{formatCurrency(row.transferCost)}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colSpan="5">
+                        <div className="total-label">
+                          <strong>Total horas semanales</strong>
+                          <span>
+                            Limite de referencia: 42:00 horas por pestaña
+                          </span>
+                        </div>
+                      </td>
+                      <td colSpan="4">
+                        <div
+                          className={`total-value ${
+                            weeklyLimitExceeded ? "is-over-limit" : ""
+                          }`}
+                        >
+                          <strong>
+                            {formatMinutesAsHours(weeklyTotalMinutes)}
+                          </strong>
+                          <span>
+                            {weeklyLimitExceeded
+                              ? "Excede el umbral recomendado"
+                              : "Dentro del rango esperado"}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan="5">
+                        <div className="total-label">
+                          <strong>Total traslado semanal</strong>
+                          <span>Visible solo en la app, excluido del PDF</span>
+                        </div>
+                      </td>
+                      <td colSpan="4">
+                        <div className="total-value neutral">
+                          <strong>{formatCurrency(weeklyTransferCost)}</strong>
+                          <span>Estimado en pesos chilenos</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <div className="lead-grid lead-grid-bottom">
+                <label className="lead-field" htmlFor="taxiLeadMinutes">
+                  <span>Minutos antes de entrada</span>
+                  <input
+                    id="taxiLeadMinutes"
+                    type="number"
+                    min="0"
+                    step="5"
+                    value={taxiLeadMinutes}
+                    onChange={handleGlobalNumberChange(setTaxiLeadMinutes)}
+                  />
+                  <small>Hora en que sale el taxi hacia el trabajo.</small>
+                </label>
+
+                <label
+                  className="lead-field secondary"
+                  htmlFor="taxiReturnMinutes"
+                >
+                  <span>Minutos despues de salida</span>
+                  <input
+                    id="taxiReturnMinutes"
+                    type="number"
+                    min="0"
+                    step="5"
+                    value={taxiReturnMinutes}
+                    onChange={handleGlobalNumberChange(setTaxiReturnMinutes)}
+                  />
+                  <small>
+                    Hora en que sale el taxi desde el lugar de trabajo.
+                  </small>
+                </label>
+              </div>
+
+              <div className="workers-panel">
+                <div className="workers-header">
+                  <div>
+                    <span className="section-tag">Dotacion del turno</span>
+                    <h3>Dotacion {activeConfig.label}</h3>
+                  </div>
+                  <div className="workers-summary">
+                    <strong>{activeWorkers.length}</strong>
+                    <span>
+                      {activeTaxiWorkersCount} usan taxi · {activeLunchWorkersCount} almuerzan
+                    </span>
+                  </div>
+                </div>
+
+                <div className="workers-list">
+                  {activeWorkers.length > 0 ? (
+                    activeWorkers.map((worker) => (
+                      <div key={worker.id} className="worker-card">
+                        <div>
+                          <strong>{worker.name}</strong>
+                          <span>
+                            {hasVacationScheduled(worker)
+                              ? "De vacaciones"
+                              : `${worker.usesTaxi ? "Con taxi" : "Sin taxi"} · ${
+                                  worker.hasLunch ? "Almuerza" : "Sin almuerzo"
+                                }`}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="workers-empty">
+                      Sin trabajadores cargados.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          </section>
+        ) : (
+          <section className="table-card worker-management-card">
+            <div className="table-header">
+              <div>
+                <span className="section-tag">Padron general</span>
+              </div>
+            </div>
+
+            <div className="worker-form-grid">
+              <input
+                type="text"
+                value={workerForm.name}
+                placeholder="Nombre del trabajador"
+                onChange={(event) => updateWorkerForm("name", event.target.value)}
+              />
+              <select
+                value={workerForm.shiftId}
+                onChange={(event) =>
+                  updateWorkerForm("shiftId", event.target.value)
+                }
+              >
+                {TAB_CONFIGS.map((tab) => (
+                  <option key={tab.id} value={tab.id}>
+                    {tab.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={workerForm.area}
+                onChange={(event) => updateWorkerForm("area", event.target.value)}
+              >
+                {areaOptions.map((area) => (
+                  <option key={area} value={area}>
+                    {area}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={workerForm.usesTaxi ? "si" : "no"}
+                onChange={(event) =>
+                  updateWorkerForm("usesTaxi", event.target.value === "si")
+                }
+              >
+                <option value="si">Taxi: Si</option>
+                <option value="no">Taxi: No</option>
+              </select>
+              <select
+                value={workerForm.hasLunch ? "si" : "no"}
+                onChange={(event) =>
+                  updateWorkerForm("hasLunch", event.target.value === "si")
+                }
+              >
+                <option value="si">Almuerza: Si</option>
+                <option value="no">Almuerza: No</option>
+              </select>
+              <input
+                type="date"
+                value={workerForm.vacationStart}
+                onChange={(event) =>
+                  updateWorkerForm("vacationStart", event.target.value)
+                }
+              />
+              <input
+                type="date"
+                value={workerForm.vacationEnd}
+                onChange={(event) =>
+                  updateWorkerForm("vacationEnd", event.target.value)
+                }
+              />
+              <button
+                type="button"
+                className="action-button"
+                onClick={addWorker}
+              >
+                Agregar trabajador
+              </button>
+            </div>
+
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Trabajador</th>
+                    <th>Turno</th>
+                    <th>Area</th>
+                    <th>Taxi</th>
+                    <th>Almuerza</th>
+                    <th>Vacaciones desde</th>
+                    <th>Vacaciones hasta</th>
+                    <th>Accion</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {workerState.map((worker) => (
+                    <tr key={worker.id}>
+                      <td>
+                        <input
+                          type="text"
+                          value={worker.name}
+                          onChange={(event) =>
+                            updateWorkerField(worker.id, "name", event.target.value)
+                          }
+                        />
+                      </td>
+                      <td>
+                        <select
+                          value={worker.shiftId}
+                          onChange={(event) =>
+                            updateWorkerField(worker.id, "shiftId", event.target.value)
+                          }
+                        >
+                          {TAB_CONFIGS.map((tab) => (
+                            <option key={tab.id} value={tab.id}>
+                              {getShiftLabel(tab.id)}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <select
+                          value={worker.area}
+                          onChange={(event) =>
+                            updateWorkerField(worker.id, "area", event.target.value)
+                          }
+                        >
+                          {areaOptions.map((area) => (
+                            <option key={area} value={area}>
+                              {area}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <select
+                          value={worker.usesTaxi ? "si" : "no"}
+                          onChange={(event) =>
+                            updateWorkerField(
+                              worker.id,
+                              "usesTaxi",
+                              event.target.value === "si"
+                            )
+                          }
+                        >
+                          <option value="si">Si</option>
+                          <option value="no">No</option>
+                        </select>
+                      </td>
+                      <td>
+                        <select
+                          value={worker.hasLunch ? "si" : "no"}
+                          onChange={(event) =>
+                            updateWorkerField(
+                              worker.id,
+                              "hasLunch",
+                              event.target.value === "si"
+                            )
+                          }
+                        >
+                          <option value="si">Si</option>
+                          <option value="no">No</option>
+                        </select>
+                      </td>
+                      <td>
+                        <input
+                          type="date"
+                          value={worker.vacationStart}
+                          onChange={(event) =>
+                            updateWorkerField(
+                              worker.id,
+                              "vacationStart",
+                              event.target.value
+                            )
+                          }
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="date"
+                          value={worker.vacationEnd}
+                          onChange={(event) =>
+                            updateWorkerField(
+                              worker.id,
+                              "vacationEnd",
+                              event.target.value
+                            )
+                          }
+                        />
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="ghost-button"
+                          onClick={() => removeWorker(worker.id)}
+                        >
+                          Quitar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="worker-summary-panel">
+              <div className="table-header compact">
+                <div>
+                  <span className="section-tag">Resumen de trabajadores</span>
+                </div>
+              </div>
+              <div className="frequency-strip">
+                <div className="frequency-card">
+                  <strong>{workingWorkersCount}</strong>
+                  <span>Viene a trabajar</span>
+                </div>
+                <div className="frequency-card">
+                  <strong>{lunchWorkersCount}</strong>
+                  <span>Almuerza</span>
+                </div>
+                <div className="frequency-card">
+                  <strong>{taxiWorkersCount}</strong>
+                  <span>Usa taxi</span>
+                </div>
+                <div className="frequency-card">
+                  <strong>{vacationWorkersCount}</strong>
+                  <span>Vacaciones</span>
+                </div>
+              </div>
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Trabajador</th>
+                      <th>Turno</th>
+                      <th>Area</th>
+                      <th>Viene a trabajar</th>
+                      <th>Almuerza</th>
+                      <th>Usa taxi</th>
+                      <th>Vacaciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {workerState.map((worker) => {
+                      const onVacation = hasVacationScheduled(worker);
+
+                      return (
+                        <tr key={`summary-${worker.id}`}>
+                          <td>{worker.name}</td>
+                          <td>{getShiftLabel(worker.shiftId)}</td>
+                          <td>{worker.area}</td>
+                          <td>{onVacation ? "No" : "Si"}</td>
+                          <td>{!onVacation && worker.hasLunch ? "Si" : "No"}</td>
+                          <td>{!onVacation && worker.usesTaxi ? "Si" : "No"}</td>
+                          <td>
+                            {onVacation
+                              ? `${worker.vacationStart || "--"} al ${
+                                  worker.vacationEnd || "--"
+                                }`
+                              : "No"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="area-manager">
+              <div className="area-manager-form">
+                <input
+                  type="text"
+                  value={areaDraft}
+                  placeholder="Nueva area"
+                  onChange={(event) => setAreaDraft(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="action-button secondary"
+                  onClick={addAreaOption}
+                >
+                  Agregar area
+                </button>
+              </div>
+              <div className="area-chip-row">
+                {areaOptions.map((area) => (
                   <button
-                    key={item.id}
-                    onClick={() => { setCurrent(idx); }}
-                    className={`w-full text-left rounded-[24px] px-4 py-3.5 border transition ${idx === current ? 'bg-slate-950 text-white border-slate-950 shadow-[0_20px_40px_-28px_rgba(15,23,42,0.65)]' : 'bg-white/90 text-slate-700 border-slate-200 hover:border-orange-200 hover:shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]'}`}
+                    key={area}
+                    type="button"
+                    className="area-chip"
+                    onClick={() => removeAreaOption(area)}
                   >
-                    <div className={`text-[11px] uppercase tracking-[0.2em] ${idx === current ? 'text-orange-300' : 'text-slate-400'}`}>{item.id}</div>
-                    <div className="mt-1.5 text-sm font-medium leading-snug">{item.title}</div>
+                    {area} ×
                   </button>
                 ))}
               </div>
-            </aside>
-
-            <main className="p-5 md:p-8 lg:p-10">
-              <div className="flex flex-col gap-4">
-                <div className="max-w-4xl">
-                  <div className="mb-3 inline-flex rounded-full bg-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-700">{screen.id}</div>
-                  <h2 className="text-3xl md:text-[2.85rem] font-semibold leading-tight text-slate-950">{screen.title}</h2>
-                  <p className={`mt-4 max-w-3xl text-slate-600 leading-relaxed ${screen.id === 'P10' ? 'text-sm' : 'text-lg'}`}>{screen.subtitle}</p>
-                  {screen.id === 'P10' && (
-                    <a
-                      href="https://dr-carlos-albornoz-1a8w3j6.gamma.site/"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-4 inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 transition hover:border-orange-300 hover:bg-orange-100"
-                    >
-                      Revisar el CV del Director Académico
-                    </a>
-                  )}
-                </div>
-                
-              </div>
-
-              <div className="mt-8">
-                <section className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-6 md:p-8 shadow-[0_30px_60px_-42px_rgba(15,23,42,0.35)]">
-                  {screen.id === 'P01' && (
-                    <div className="mb-6 flex justify-end">
-                      <img
-                        src={`${process.env.PUBLIC_URL}/stec-transparente-color.png`}
-                        alt="Logo Santo Tomas Educacion Continua"
-                        className="h-10 w-auto md:h-12"
-                      />
-                    </div>
-                  )}
-                  <div className="space-y-4">
-                    {screen.body.map((paragraph, idx) => {
-                      if (screen.id === 'P01' && idx === 3) {
-                        return (
-                          <p key={idx} className="text-slate-700 text-sm leading-7">
-                            Contamos con una alianza con el{' '}
-                            <a
-                              href="https://positiveleadership.louisville.edu/"
-                              target="_blank"
-                              rel="noreferrer"
-                              className="font-semibold text-orange-600 hover:text-orange-700"
-                            >
-                              Center for Positive Leadership
-                            </a>
-                            , un centro que tiene en su claustro a los creadores del concepto liderazgo positivo. Este diploma está avalado por ese centro y, según la fecha, puede contar con académicos del centro como docentes (disponible solo en inglés).
-                          </p>
-                        );
-                      }
-
-                      return (
-                        <p
-                          key={idx}
-                          className={`leading-relaxed ${isCompactBody ? 'text-sm text-slate-700 leading-7' : 'text-[17px] text-slate-700 md:text-[18px]'}`}
-                        >
-                          {paragraph}
-                        </p>
-                      );
-                    })}
-                    {screen.id === 'P01' && (
-                      <a
-                        href="https://positiveleadership.louisville.edu/"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 transition hover:border-orange-300 hover:bg-orange-100"
-                      >
-                        Revisar sitio web del Centro de la Universidad de Louisville, Kentucky, USA
-                      </a>
-                    )}
-                  </div>
-                  {renderInteraction()}
-                  {screen.id === 'P03' && (
-                    <div className="mt-6 grid md:grid-cols-2 gap-4">
-                      <div className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_50px_-34px_rgba(15,23,42,0.45)]">
-                        <div className="mb-2 text-sm font-semibold text-slate-900">Lugar</div>
-                        <div className="text-slate-600 text-sm leading-relaxed">
-                          Sede Vergara.<br />
-                          <strong>Sesión de cierre: Club de Campo Entel u otro según disponibilidad.</strong>
-                        </div>
-                      </div>
-                      <div className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_50px_-34px_rgba(15,23,42,0.45)]">
-                        <div className="mb-2 text-sm font-semibold text-slate-900">Certificación Formal</div>
-                        <div className="text-slate-600 text-sm leading-relaxed">
-                          Ofrecemos la posibilidad de obtener un diplomado de 120 horas como parte del mismo programa.
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {screen.id === 'P09' && (
-                    <div className="mt-8 rounded-[28px] border border-orange-200 bg-gradient-to-br from-orange-50 via-white to-white p-6 shadow-[0_24px_50px_-34px_rgba(249,115,22,0.4)]">
-                      <div className="mb-2 text-sm font-semibold text-slate-900">Valor por alumno</div>
-                      <div className="text-slate-700 text-sm leading-relaxed">
-                        $1.380.000.- (en base a 35 alumnos inscritos). Incluye dos coffee ejecutivo nivel medio alto, almuerzo, pack de bienvenida, mochila institucional, jornada de cierre en club de campo y coctel de despedida, además de diplomas y acceso a aula virtual por el tiempo que dure el programa.
-                      </div>
-                    </div>
-                  )}
-                  {screen.id === 'P10' && (
-                    <div className="mt-8 rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_50px_-34px_rgba(15,23,42,0.45)]">
-                      <div className="mb-2 text-sm font-semibold text-slate-900">Contacto</div>
-                      <div className="text-slate-950 font-medium">Giovanna Avila</div>
-                      <div className="text-slate-600 text-sm mt-1">Consultor senior y responsable de esta propuesta</div>
-                      <div className="text-slate-600 text-sm mt-1">+56 9 7823 0703</div>
-                      <a
-                        href="mailto:gavila6@santotomas.cl"
-                        className="mt-4 inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 transition hover:border-orange-300 hover:bg-orange-100"
-                      >
-                        gavila6@santotomas.cl
-                      </a>
-                    </div>
-                  )}
-                </section>
-              </div>
-
-              <div className="mt-10 flex items-center justify-between gap-4">
-                <button
-                  onClick={prev}
-                  disabled={current === 0}
-                  className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-400 disabled:opacity-40"
-                >
-                  Anterior
-                </button>
-                
-                <button
-                  onClick={next}
-                  disabled={current === screens.length - 1}
-                  className="rounded-full bg-slate-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-40"
-                >
-                  Siguiente
-                </button>
-              </div>
-            </main>
-          </div>
-        </div>
-      </div>
+            </div>
+          </section>
+        )}
+      </main>
     </div>
   );
 }
+
+export default App;

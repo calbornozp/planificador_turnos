@@ -1,70 +1,243 @@
-# Getting Started with Create React App
+# Experta Hub MVP
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+MVP web para captar docentes expertos, forzar un pre-cuestionario aplicado por industria, gestionar entrevistas de extraccion de conocimiento y operar validaciones humanas sin usar agentes ni IA.
 
-## Available Scripts
+## Resumen ejecutivo
 
-In the project directory, you can run:
+- Ruta elegida: `Supabase + n8n + Google Calendar + storage + frontend liviano`.
+- El frontend actual corre sin backend real para acelerar implementacion y dejar el contrato listo.
+- La arquitectura prioriza velocidad, claridad operacional, trazabilidad y extensibilidad.
+- El sistema cubre solo estas areas: liderazgo, equipos, gestion de personas, marketing, procesos de negocios y administracion.
+- El docente no diseña cursos, no crea SCORM y no define evaluaciones.
+- El pre-cuestionario aplica validaciones duras sin IA: minimos, frases bloqueadas y chequeos estructurales simples.
+- La ficha del ayudante espeja el pre-cuestionario y guarda campos separados con versionado.
+- Validacion 1: texto estructurado solo comentable.
+- Validacion 2: revision SCORM con eliminacion de laminas y motivo obligatorio.
+- La persistencia demo esta en `src/data/mockData.js`; luego puede migrarse a Supabase.
 
-### `npm start`
+## Arquitectura propuesta
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Decision principal
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Se implementa la Ruta B porque Notion sirve bien como backoffice liviano, pero se vuelve mas fragil en cuanto a permisos, versionado, estados operativos, adjuntos, trazabilidad y futura automatizacion a medida que el flujo crece. Para un MVP que debe operar comodo con 500 docentes y dejar una base seria para fase 2, Supabase entrega una estructura mas limpia.
 
-### `npm test`
+### Componentes
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- `React SPA`: landing, flujo docente, panel interno y validaciones.
+- `Supabase (fase siguiente)`: tablas, auth basica del equipo interno, storage de grabaciones/transcripciones, policies.
+- `n8n (fase siguiente)`: confirmaciones por correo, cambios de estado, handoffs operativos, envios a validacion.
+- `Google Calendar (fase siguiente)`: creacion real de entrevistas, links de reunion y confirmaciones.
+- `Storage (fase siguiente)`: grabaciones, transcripciones y artefactos de validacion.
 
-### `npm run build`
+### Principios de implementacion
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Nada de IA ni bots en esta fase.
+- Adaptadores desacoplados para servicios futuros.
+- Datos separados por entidad, no en blobs.
+- Estados trazables en todo el ciclo.
+- Validaciones simples y configurables.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Modelo de datos
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 1. Docentes
 
-### `npm run eject`
+- `id`
+- `name`
+- `email`
+- `phone`
+- `institution`
+- `bio`
+- `thematicAreas`
+- `industries`
+- `appliedExamples`
+- `experience`
+- `registrationSource`
+- `status`
+- `createdAt`
+- `preQuestionnaire`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 2. Necesidades de contenido
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- `id`
+- `title`
+- `program`
+- `targetAudience`
+- `topic`
+- `targetIndustry`
+- `description`
+- `status`
+- `internalOwner`
+- `createdAt`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 3. Entrevistas
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- `id`
+- `applicationId`
+- `teacherId`
+- `contentNeedId`
+- `assistantId`
+- `dateTime`
+- `status`
+- `meetingLink`
+- `recordingUrl`
+- `transcriptUrl`
+- `notes`
+- `summary`
+- `createdAt`
 
-## Learn More
+### 4. Fichas de conocimiento
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- `id`
+- `interviewId`
+- `topic`
+- `thematicArea`
+- `targetAudience`
+- `industry`
+- `problemSolved`
+- `mainAppliedCase`
+- `centralIdea`
+- `keyStatements`
+- `commonErrors`
+- `appliedExample`
+- `importantDistinctions`
+- `whatNotToDo`
+- `assistantNotes`
+- `version`
+- `validationStatus`
+- `source`
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 5. Postulaciones
 
-### Code Splitting
+- `id`
+- `teacherId`
+- `contentNeedId`
+- `selectedArea`
+- `status`
+- `createdAt`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### 6. Comentarios de validacion 1
 
-### Analyzing the Bundle Size
+- `id`
+- `knowledgeCardId`
+- `teacherId`
+- `comment`
+- `createdAt`
+- `associatedVersion`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### 7. Revisiones SCORM
 
-### Making a Progressive Web App
+- `id`
+- `moduleId`
+- `teacherId`
+- `slideId`
+- `action`
+- `reason`
+- `createdAt`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Backlog inicial
 
-### Advanced Configuration
+### Epica 1: Captacion publica
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- Landing con propuesta de valor y limites del rol docente.
+- Vista publica de oportunidades derivadas de necesidades de contenido.
+- Creacion de postulacion antes del registro completo del docente.
+- Estados de ingreso y origen de registro.
 
-### Deployment
+### Epica 2: Pre-cuestionario
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- Seleccion de areas e industrias.
+- Validaciones de minimos por campo.
+- Bloqueo por frases genericas configurables.
+- Validacion de caso aplicado con contexto, accion y resultado.
 
-### `npm run build` fails to minify
+### Epica 3: Agenda
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Seleccion de dos slots de una hora.
+- Adaptador futuro para Google Calendar.
+- Confirmacion de entrevistas y links de reunion.
+
+### Epica 4: Operacion interna
+
+- Vista de docentes, necesidades, entrevistas y estados.
+- Formulario de ficha del ayudante.
+- Versionado y trazabilidad a entrevista/transcripcion.
+
+### Epica 5: Validaciones
+
+- Validacion 1 por comentarios.
+- Validacion 2 con eliminacion de laminas y motivo.
+- Historial de observaciones por version.
+
+### Epica 6: Integraciones futuras
+
+- Supabase Auth para equipo interno.
+- Storage para grabaciones y transcripciones.
+- n8n para correos y handoffs.
+- Calendario real y webhooks de estados.
+
+## Estructura del repositorio
+
+```text
+src/
+  App.js
+  App.css
+  data/
+    mockData.js
+  lib/
+    questionnaireValidation.js
+  index.js
+  index.css
+docs/
+  api-contract.md
+```
+
+## Pantallas implementadas
+
+- `Landing`: explicacion del producto, alcance y arquitectura.
+- `Flujo docente`: registro, pre-cuestionario endurecido y agenda.
+- `Flujo docente`: oportunidades publicas conectadas a necesidades + postulacion.
+- `Panel interno`: resumen operativo, necesidades, entrevistas y ficha del ayudante.
+- `Validaciones`: comentario sobre texto estructurado y revision SCORM.
+
+## Como correr localmente
+
+### Requisitos
+
+- Node.js 18.x
+- npm 9+
+
+### Pasos
+
+```bash
+npm install
+npm start
+```
+
+La app abre en `http://localhost:3000`.
+
+### Verificacion basica
+
+```bash
+npm test -- --watch=false
+npm run build
+```
+
+## Supuestos documentados
+
+- El MVP usa datos locales en memoria para demostrar el flujo completo.
+- La autenticacion interna aun no esta conectada a un proveedor real.
+- El agendamiento es una simulacion de slots, no sincroniza calendarios todavia.
+- Las grabaciones, transcripciones y SCORM son referencias estructurales, no archivos reales del flujo.
+
+## Preparado para seguir iterando
+
+La base ya deja separados:
+
+- reglas de validacion del pre-cuestionario
+- contratos de datos por entidad
+- estados operativos del proceso
+- puntos de integracion para backend, correo, calendario y storage
+
+El siguiente paso natural es reemplazar `mockData.js` por repositorios reales de Supabase y mover las transiciones de estado a una capa `services/`.
+
+El contrato inicial de endpoints futuros esta en [docs/api-contract.md](./docs/api-contract.md).

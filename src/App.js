@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
 const DAYS = [
@@ -18,6 +18,7 @@ const PDF_START_Y = 792;
 const PDF_LINE_HEIGHT = 16;
 const PDF_MAX_CHARS = 88;
 const PDF_LINES_PER_PAGE = 44;
+const LOCAL_STORAGE_KEY = "planificador_turnos_state_v1";
 
 const currencyFormatter = new Intl.NumberFormat("es-CL", {
   style: "currency",
@@ -690,6 +691,7 @@ function normalizeImportedTabState(rawTabs) {
 }
 
 function buildExportPayload({
+  activeSection,
   activeTab,
   taxiLeadMinutes,
   taxiReturnMinutes,
@@ -700,6 +702,7 @@ function buildExportPayload({
   return {
     version: 1,
     exportedAt: new Date().toISOString(),
+    activeSection,
     activeTab,
     taxiLeadMinutes,
     taxiReturnMinutes,
@@ -715,6 +718,52 @@ function downloadJsonFile(payload, filename) {
   });
 
   downloadBlob(blob, filename);
+}
+
+function loadPersistedPlanningState() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw);
+
+    if (!parsed || typeof parsed !== "object" || !parsed.tabs) {
+      return null;
+    }
+
+    const normalizedWorkers = normalizeImportedWorkers(parsed.workers);
+
+    return {
+      activeSection:
+        parsed.activeSection === "trabajadores" ? "trabajadores" : "turnos",
+      activeTab: TAB_CONFIGS.some((tab) => tab.id === parsed.activeTab)
+        ? parsed.activeTab
+        : TAB_CONFIGS[0].id,
+      taxiLeadMinutes:
+        parsed.taxiLeadMinutes !== undefined
+          ? String(parsed.taxiLeadMinutes)
+          : "45",
+      taxiReturnMinutes:
+        parsed.taxiReturnMinutes !== undefined
+          ? String(parsed.taxiReturnMinutes)
+          : "15",
+      tabState: normalizeImportedTabState(parsed.tabs),
+      workerState: normalizedWorkers,
+      areaOptions: normalizeImportedAreaOptions(
+        parsed.areaOptions,
+        normalizedWorkers
+      ),
+    };
+  } catch (error) {
+    return null;
+  }
 }
 
 function getRowValidation(row) {
@@ -923,13 +972,28 @@ function buildTurnPdfLines({
 }
 
 function App() {
-  const [activeSection, setActiveSection] = useState("turnos");
-  const [activeTab, setActiveTab] = useState(TAB_CONFIGS[0].id);
-  const [taxiLeadMinutes, setTaxiLeadMinutes] = useState("45");
-  const [taxiReturnMinutes, setTaxiReturnMinutes] = useState("15");
-  const [tabState, setTabState] = useState(buildInitialTabState);
-  const [workerState, setWorkerState] = useState(buildInitialWorkersState);
-  const [areaOptions, setAreaOptions] = useState(DEFAULT_AREA_OPTIONS);
+  const persistedState = useMemo(loadPersistedPlanningState, []);
+  const [activeSection, setActiveSection] = useState(
+    persistedState?.activeSection || "turnos"
+  );
+  const [activeTab, setActiveTab] = useState(
+    persistedState?.activeTab || TAB_CONFIGS[0].id
+  );
+  const [taxiLeadMinutes, setTaxiLeadMinutes] = useState(
+    persistedState?.taxiLeadMinutes || "45"
+  );
+  const [taxiReturnMinutes, setTaxiReturnMinutes] = useState(
+    persistedState?.taxiReturnMinutes || "15"
+  );
+  const [tabState, setTabState] = useState(
+    persistedState?.tabState || buildInitialTabState
+  );
+  const [workerState, setWorkerState] = useState(
+    persistedState?.workerState || buildInitialWorkersState
+  );
+  const [areaOptions, setAreaOptions] = useState(
+    persistedState?.areaOptions || DEFAULT_AREA_OPTIONS
+  );
   const [workerForm, setWorkerForm] = useState(DEFAULT_WORKER_FORM);
   const [areaDraft, setAreaDraft] = useState("");
   const [fileMessage, setFileMessage] = useState("");
@@ -1061,6 +1125,7 @@ function App() {
 
   const exportPlanningFile = () => {
     const payload = buildExportPayload({
+      activeSection,
       activeTab,
       taxiLeadMinutes,
       taxiReturnMinutes,
@@ -1205,6 +1270,32 @@ function App() {
     );
     setFileMessage("Area eliminada y trabajadores reasignados a comercial.");
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const payload = buildExportPayload({
+      activeSection,
+      activeTab,
+      taxiLeadMinutes,
+      taxiReturnMinutes,
+      tabState,
+      workerState,
+      areaOptions,
+    });
+
+    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+  }, [
+    activeSection,
+    activeTab,
+    taxiLeadMinutes,
+    taxiReturnMinutes,
+    tabState,
+    workerState,
+    areaOptions,
+  ]);
 
   return (
     <div className="scheduler-app">
